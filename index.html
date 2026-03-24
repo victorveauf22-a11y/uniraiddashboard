@@ -749,7 +749,7 @@ const FIREBASE_CONFIG = {
   appId: "1:739843669998:web:22de7671d5c5fb83d718ff",
   measurementId: "G-J28SGLH0HJ"
 };
-const SHARED_PASSWORD = 'cptelvic62';
+const SHARED_PASSWORD_HASH = '49a7ce4b6358d403d297bc323a917068195f6d13fd09adf7eccedc1d0bfc87c3';
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const db   = firebase.firestore();
@@ -823,10 +823,16 @@ function startSync() {
   });
 }
 
+async function hashInput(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 async function tryLogin() {
   const input = document.getElementById('pw-input');
   const errEl = document.getElementById('pw-err');
-  if (input.value !== SHARED_PASSWORD) {
+  const hashed = await hashInput(input.value);
+  if (hashed !== SHARED_PASSWORD_HASH) {
     errEl.textContent = 'Wrong password';
     input.value = '';
     input.focus();
