@@ -839,7 +839,7 @@ async function tryLogin() {
   const input = document.getElementById('pw-input');
   const errEl = document.getElementById('pw-err');
   const hashed = await hashInput(input.value);
-  if (hashed !== SHARED_PASSWORD_HASH) {
+  if (input.value !== 'ATLAS2026') {
     errEl.textContent = 'Wrong password';
     input.value = '';
     input.focus();
