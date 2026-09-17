@@ -375,7 +375,18 @@ tbody tr:hover .td-del{opacity:1;}
 
   <!-- CAR -->
   <section class="section" id="s-car">
-    <div class="page-header"><span class="page-title">Car Tracker</span></div>
+    <div class="page-header">
+      <span class="page-title">Car Tracker</span>
+      <button class="btn btn-gold" onclick="openModal('lead-modal')">+ Add ad</button>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-head"><span class="card-label">Ads contacted</span></div>
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>Seller</th><th>Platform</th><th>Price</th><th>Location</th><th>Contacted</th><th>Status</th><th>Notes</th><th></th>
+        </tr></thead><tbody id="leads-tbody"></tbody></table>
+      </div>
+    </div>
     <div class="car-grid">
       <div class="card" id="car-info"></div>
       <div class="card" id="car-docs"></div>
@@ -451,6 +462,16 @@ tbody tr:hover .td-del{opacity:1;}
   <div class="s-opt" data-s="paid"><span class="badge b-paid">Paid</span></div>
 </div>
 
+<!-- CAR LEAD STATUS PICKER -->
+<div class="s-picker" id="l-picker">
+  <div class="s-opt" data-s="sent"><span class="badge b-contact">Sent — no reply</span></div>
+  <div class="s-opt" data-s="replied"><span class="badge b-working">Seller replied</span></div>
+  <div class="s-opt" data-s="visit"><span class="badge b-priority">Visit scheduled</span></div>
+  <div class="s-opt" data-s="sold"><span class="badge b-no">Sold / gone</span></div>
+  <div class="s-opt" data-s="passed"><span class="badge b-hold">Passed (we declined)</span></div>
+  <div class="s-opt" data-s="dead"><span class="badge b-never">No response</span></div>
+</div>
+
 <!-- SPONSOR MODAL -->
 <div class="modal-bg" id="sponsor-modal">
   <div class="modal">
@@ -516,6 +537,33 @@ tbody tr:hover .td-del{opacity:1;}
   </div>
 </div>
 
+<!-- CAR LEAD MODAL -->
+<div class="modal-bg" id="lead-modal">
+  <div class="modal">
+    <div class="modal-title">Add Car Ad</div>
+    <div class="f-group"><label class="f-lbl">Seller</label><input class="f-in" id="lm-seller"></div>
+    <div class="f-group"><label class="f-lbl">Platform</label>
+      <select class="f-sel" id="lm-platform"><option value="Milanuncios">Milanuncios</option><option value="Wallapop">Wallapop</option><option value="Other">Other</option></select>
+    </div>
+    <div class="f-group"><label class="f-lbl">Price</label><input class="f-in" id="lm-price" placeholder="1.500€"></div>
+    <div class="f-group"><label class="f-lbl">Location</label><input class="f-in" id="lm-loc"></div>
+    <div class="f-group"><label class="f-lbl">Link</label><input class="f-in" id="lm-link" placeholder="https://..."></div>
+    <div class="f-group"><label class="f-lbl">Contacted</label><input class="f-in" id="lm-contacted" placeholder="17 Sep"></div>
+    <div class="f-group"><label class="f-lbl">Status</label>
+      <select class="f-sel" id="lm-status">
+        <option value="sent">Sent — no reply</option><option value="replied">Seller replied</option>
+        <option value="visit">Visit scheduled</option><option value="sold">Sold / gone</option>
+        <option value="passed">Passed (we declined)</option><option value="dead">No response</option>
+      </select>
+    </div>
+    <div class="f-group"><label class="f-lbl">Notes</label><input class="f-in" id="lm-notes"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('lead-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveCarLead()">Add</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Saved</div>
 
 <script>
@@ -527,6 +575,8 @@ const WL = {both:'Both days',sat:'Saturday',no:'No'};
 const WT = {both:'t-both',sat:'t-sat',no:'t-nowd'};
 const COST_L = {paid:'Paid',planned:'Planned',pending:'Pending'};
 const COST_C = {paid:'b-paid',planned:'b-planned',pending:'b-pending'};
+const LL = {sent:'Sent — no reply',replied:'Seller replied',visit:'Visit scheduled',sold:'Sold / gone',passed:'Passed (we declined)',dead:'No response'};
+const LC = {sent:'b-contact',replied:'b-working',visit:'b-priority',sold:'b-no',passed:'b-hold',dead:'b-never'};
 const IG_COLORS = {'Pre-event':'#C8903A','During':'#6cb6ff','Post-event':'#3fb950'};
 
 // ── DEFAULT DATA ────────────────────────────────────────
@@ -640,6 +690,15 @@ const DEFAULTS = {
       {l:'Recovery tracks / sand mats',d:false},{l:'Tow rope',d:false},{l:'Jump cables',d:false},
       {l:'Jack + wheel brace',d:false},{l:'Tool kit (basic)',d:false},{l:'Jerry can (fuel)',d:false},
       {l:'Water reserves (≥ 10L)',d:false},{l:'Phone mounts + charger',d:false},{l:'High-vis vests',d:false},
+    ],
+    leads:[
+      {id:1,seller:'Quim',platform:'Milanuncios',price:'1.400€',loc:'Igualada',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-614444651.htm',contacted:'15 Sep',status:'sold',notes:'Ad now shows "Anuncio eliminado" — likely sold. Sent follow-up asking him to confirm, no reply yet.'},
+      {id:2,seller:'Sánchez',platform:'Milanuncios',price:'1.500€',loc:'Badalona',link:'',contacted:'15 Sep',status:'sent',notes:'Diesel, sunroof. No reply yet. (Listing link not saved — check Milanuncios inbox.)'},
+      {id:3,seller:'Fran',platform:'Milanuncios',price:'1.600€',loc:'Sabadell',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-610192547.htm',contacted:'16 Sep',status:'sent',notes:'1989, 1.8 90cv, 196k km. ⚠ ITV expired since August, disclosed suspension noise.'},
+      {id:4,seller:'Arnaldo Colmenarez',platform:'Milanuncios',price:'2.200€',loc:'Barcelona',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-591881477.htm',contacted:'16 Sep',status:'sent',notes:'2001, 221k km, gasoline. Best-documented so far: ITV passed June, AC, electric windows, Bluetooth.'},
+      {id:5,seller:'Oscar',platform:'Milanuncios',price:'2.300€',loc:'Santa Perpètua de Mogoda',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-593536304.htm',contacted:'16 Sep',status:'sent',notes:'2002, 210k km, gasoline. Clutch + timing belt recently done, but seller discloses higher-than-normal oil consumption.'},
+      {id:6,seller:'Vixen',platform:'Milanuncios',price:'2.500€',loc:'Granollers',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-534135179.htm',contacted:'16 Sep',status:'sent',notes:'2008 diesel, 456k km. ⚠ Actually a Golf Variant (estate), not a hatchback. Seller prefers phone calls.'},
+      {id:7,seller:'Girona G.',platform:'Wallapop',price:'1.300€',loc:'Sant Feliu de Guíxols',link:'https://es.wallapop.com/item/volkswagen-golf-2001-1300759773',contacted:'17 Sep',status:'sent',notes:'2001, 1.9 TDI, reliable per seller. ITV valid to 2027, timing belt done. ⚠ ~88km from Barcelona.'},
     ],
     notes:''
   },
@@ -903,7 +962,7 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 
 // ── HELPERS ──────────────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function badge(st){ return `<span class="badge ${SC[st]}" data-st="${st}">${SL[st]}</span>`; }
+function badge(st,colMap,lblMap){ colMap=colMap||SC; lblMap=lblMap||SL; return `<span class="badge ${colMap[st]}" data-st="${st}">${lblMap[st]}</span>`; }
 function costBadge(st){ return `<span class="badge ${COST_C[st]}" data-st="${st}">${COST_L[st]}</span>`; }
 function ce(el,obj,key,cb){
   el.addEventListener('blur',()=>{ obj[key]=el.textContent.trim(); save(); if(cb)cb(); });
@@ -914,8 +973,9 @@ function ce(el,obj,key,cb){
 let _pickerTarget=null, _pickerType=null, _pickerId=null;
 const picker  = document.getElementById('s-picker');
 const cpicker = document.getElementById('c-picker');
+const lpicker = document.getElementById('l-picker');
 
-function hideAllPickers(){ picker.style.display='none'; cpicker.style.display='none'; }
+function hideAllPickers(){ picker.style.display='none'; cpicker.style.display='none'; lpicker.style.display='none'; }
 
 document.addEventListener('click',e=>{
   if(picker.contains(e.target)||cpicker.contains(e.target)) return;
@@ -924,10 +984,10 @@ document.addEventListener('click',e=>{
     _pickerTarget=b;
     const row=b.closest('tr');
     _pickerId=row?parseInt(row.dataset.id):null;
-    _pickerType=row&&row.closest('#sp-tbody')?'sponsor':row&&row.closest('#cost-tbody')?'cost':null;
+    _pickerType=row&&row.closest('#sp-tbody')?'sponsor':row&&row.closest('#cost-tbody')?'cost':row&&row.closest('#leads-tbody')?'lead':null;
     const r=b.getBoundingClientRect();
     hideAllPickers();
-    const active = _pickerType==='cost' ? cpicker : picker;
+    const active = _pickerType==='cost' ? cpicker : _pickerType==='lead' ? lpicker : picker;
     active.style.left=r.left+'px';
     active.style.top=(r.bottom+4)+'px';
     active.style.display='block';
@@ -957,6 +1017,19 @@ cpicker.querySelectorAll('.s-opt').forEach(o=>o.addEventListener('click',()=>{
   _pickerTarget.className='badge '+COST_C[ns];
   _pickerTarget.dataset.st=ns;
   _pickerTarget.textContent=COST_L[ns];
+  hideAllPickers();
+}));
+
+lpicker.querySelectorAll('.s-opt').forEach(o=>o.addEventListener('click',()=>{
+  if(!_pickerTarget||_pickerType!=='lead') return;
+  const ns=o.dataset.s;
+  const l=D.car.leads.find(x=>x.id===_pickerId);
+  if(l){l.status=ns;save();}
+  const row=_pickerTarget.closest('tr');
+  if(row) row.dataset.status=ns;
+  _pickerTarget.className='badge '+LC[ns];
+  _pickerTarget.dataset.st=ns;
+  _pickerTarget.textContent=LL[ns];
   hideAllPickers();
 }));
 
@@ -1147,7 +1220,42 @@ function addTodo(){
 document.getElementById('todo-in').addEventListener('keydown',e=>{if(e.key==='Enter')addTodo();});
 
 // ── CAR ──────────────────────────────────────────────────
+function renderCarLeads(){
+  if(!D.car.leads) D.car.leads=[];
+  const tb=document.getElementById('leads-tbody');
+  tb.innerHTML='';
+  D.car.leads.forEach(l=>{
+    const tr=document.createElement('tr');
+    tr.dataset.id=l.id; tr.dataset.status=l.status;
+    const linkCell = l.link ? `<a href="${esc(l.link)}" target="_blank" rel="noopener" style="color:var(--text-muted);text-decoration:none;">↗</a>` : '';
+    tr.innerHTML=`
+      <td class="td-name" contenteditable data-f="seller">${esc(l.seller)}</td>
+      <td class="td-mono" contenteditable data-f="platform">${esc(l.platform)}</td>
+      <td class="td-mono" contenteditable data-f="price">${esc(l.price)}</td>
+      <td class="td-cat" contenteditable data-f="loc">${esc(l.loc)}</td>
+      <td class="td-mono" contenteditable data-f="contacted">${esc(l.contacted)}</td>
+      <td>${badge(l.status,LC,LL)}</td>
+      <td class="td-notes" contenteditable data-f="notes">${esc(l.notes)}</td>
+      <td class="td-del">${linkCell} <button class="del-btn" onclick="delCarLead(${l.id})">×</button></td>`;
+    tr.querySelectorAll('[contenteditable]').forEach(c=>{
+      c.addEventListener('blur',()=>{
+        const lead=D.car.leads.find(x=>x.id===l.id);
+        if(lead){lead[c.dataset.f]=c.textContent.trim();save();}
+      });
+      c.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();c.blur();}});
+    });
+    tb.appendChild(tr);
+  });
+}
+function delCarLead(id){D.car.leads=D.car.leads.filter(x=>x.id!==id);save();renderCarLeads();}
+function saveCarLead(){
+  if(!D.car.leads) D.car.leads=[];
+  D.car.leads.push({id:_id++,seller:v('lm-seller')||'New',platform:v('lm-platform')||'—',price:v('lm-price')||'—',loc:v('lm-loc')||'—',link:v('lm-link')||'',contacted:v('lm-contacted')||'—',status:v('lm-status'),notes:v('lm-notes')||'—'});
+  save();renderCarLeads();closeModal('lead-modal');
+  ['lm-seller','lm-price','lm-loc','lm-link','lm-contacted','lm-notes'].forEach(id=>document.getElementById(id).value='');
+}
 function renderCar(){
+  renderCarLeads();
   // Info
   const ci=document.getElementById('car-info');
   ci.innerHTML='<div class="card-head"><span class="card-label">Vehicle info</span></div>';
