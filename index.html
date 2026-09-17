@@ -262,6 +262,7 @@ tbody tr:hover .td-del{opacity:1;}
   <div class="sidebar-nav">
     <div class="nav-item active" data-sec="dashboard"><span class="nav-icon">◈</span>Dashboard</div>
     <div class="nav-item" data-sec="sponsors"><span class="nav-icon">◎</span>Sponsors</div>
+    <div class="nav-item" data-sec="meetings"><span class="nav-icon">▤</span>Meetings</div>
     <div class="nav-item" data-sec="gear"><span class="nav-icon">⊡</span>Gear Donors</div>
     <div class="nav-item" data-sec="costs"><span class="nav-icon">◷</span>Costs</div>
     <div class="nav-item" data-sec="car"><span class="nav-icon">◐</span>Car Tracker</div>
@@ -332,6 +333,22 @@ tbody tr:hover .td-del{opacity:1;}
         <table><thead><tr>
           <th>Name</th><th>Category</th><th>Contact</th><th>Connection</th><th>Status</th><th>Tier / Amount</th><th>Notes</th><th></th>
         </tr></thead><tbody id="sp-tbody"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEETINGS -->
+  <section class="section" id="s-meetings">
+    <div class="page-header">
+      <span class="page-title">Meetings</span>
+      <button class="btn btn-gold" onclick="openModal('meeting-modal')">+ Add meeting</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">UNIRAID-related meetings and calls pulled from Victor's calendar.</p>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table><thead><tr>
+          <th>Date</th><th>Title</th><th>Notes</th><th></th>
+        </tr></thead><tbody id="meetings-tbody"></tbody></table>
       </div>
     </div>
   </section>
@@ -564,6 +581,20 @@ tbody tr:hover .td-del{opacity:1;}
   </div>
 </div>
 
+<!-- MEETING MODAL -->
+<div class="modal-bg" id="meeting-modal">
+  <div class="modal">
+    <div class="modal-title">Add Meeting</div>
+    <div class="f-group"><label class="f-lbl">Date</label><input class="f-in" id="mm-date" placeholder="17 Sep '26 · 14:00"></div>
+    <div class="f-group"><label class="f-lbl">Title</label><input class="f-in" id="mm-title"></div>
+    <div class="f-group"><label class="f-lbl">Notes</label><input class="f-in" id="mm-notes"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('meeting-modal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveMeeting()">Add</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Saved</div>
 
 <script>
@@ -623,6 +654,16 @@ const DEFAULTS = {
     {id:39,name:'Green Events',cat:'Social initiatives',contact:'—',conn:'—',status:'no',tier:'—',notes:'—'},
     {id:40,name:'Empresas Solidarias',cat:'Social initiatives',contact:'—',conn:'—',status:'no',tier:'—',notes:'—'},
     {id:41,name:'Padel',cat:'—',contact:'—',conn:'—',status:'no',tier:'—',notes:'—'},
+  ],
+  meetings:[
+    {id:1,date:"23 Feb '26 · 15:00",title:'Sponsor visits with Telmo',notes:''},
+    {id:2,date:"26 Feb '26 · 17:30",title:'Telmo — UNIRAID catch-up',notes:''},
+    {id:3,date:"27 Feb '26 · 21:15",title:'Sponsor call (UNIRAID)',notes:''},
+    {id:4,date:"2 Mar '26 · 14:00",title:'Sponsor visits with Telmo',notes:''},
+    {id:5,date:"6 Mar '26 · 16:00",title:'Romain Chalumeau — UNIRAID',notes:''},
+    {id:6,date:"15 Mar '26 · 10:00",title:'Paroisse posters & speech',notes:'Presenting UNIRAID at the parish'},
+    {id:7,date:"4 Sep '26 · 16:00",title:'Wonderbox sponsor call',notes:'Contact: Bertile / James. Platinum tier target €2,000.'},
+    {id:8,date:"13 Sep '26 · 12:00",title:'UNIRAID meeting',notes:''},
   ],
   gear:[
     {id:1,name:'Wala Barcelona',type:'in',loc:'Pg. Zona Franca 191, Barcelona',hours:'10:00–21:00',wk:'sat'},
@@ -850,6 +891,7 @@ function save() {
 
 function renderAll() {
   renderSponsors();
+  renderMeetings();
   renderGear();
   renderCosts();
   renderTodos();
@@ -1062,6 +1104,38 @@ function renderSponsors(){
   renderStats();
 }
 function delSponsor(id){D.sponsors=D.sponsors.filter(x=>x.id!==id);save();renderSponsors();renderFunding();}
+
+// ── MEETINGS ─────────────────────────────────────────────
+function renderMeetings(){
+  if(!D.meetings) D.meetings=[];
+  const tb=document.getElementById('meetings-tbody');
+  tb.innerHTML='';
+  D.meetings.forEach(m=>{
+    const tr=document.createElement('tr');
+    tr.dataset.id=m.id;
+    tr.innerHTML=`
+      <td class="td-mono" contenteditable data-f="date">${esc(m.date)}</td>
+      <td class="td-name" contenteditable data-f="title">${esc(m.title)}</td>
+      <td class="td-notes" contenteditable data-f="notes">${esc(m.notes)}</td>
+      <td class="td-del"><button class="del-btn" onclick="delMeeting(${m.id})">×</button></td>`;
+    tr.querySelectorAll('[contenteditable]').forEach(c=>{
+      c.addEventListener('blur',()=>{
+        const mt=D.meetings.find(x=>x.id===m.id);
+        if(mt){mt[c.dataset.f]=c.textContent.trim();save();}
+      });
+      c.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();c.blur();}});
+    });
+    tb.appendChild(tr);
+  });
+}
+function delMeeting(id){D.meetings=D.meetings.filter(x=>x.id!==id);save();renderMeetings();}
+function saveMeeting(){
+  if(!D.meetings) D.meetings=[];
+  D.meetings.push({id:_id++,date:v('mm-date')||'—',title:v('mm-title')||'New meeting',notes:v('mm-notes')||''});
+  save();renderMeetings();closeModal('meeting-modal');
+  ['mm-date','mm-title','mm-notes'].forEach(id=>document.getElementById(id).value='');
+}
+
 function applySpFilter(){
   document.querySelectorAll('#sp-tbody tr').forEach(r=>{
     const mf=spFilter==='all'||r.dataset.status===spFilter;
