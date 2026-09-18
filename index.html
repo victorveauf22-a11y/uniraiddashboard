@@ -230,6 +230,31 @@ tbody tr:hover .td-del{opacity:1;}
 
 /* NOTE */
 .note{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:11px 14px;font-size:12px;color:var(--text-muted);font-style:italic;line-height:1.6;margin-top:10px;}
+
+/* ── CALENDAR ─────────────────────────────────────────── */
+.cal-nav{display:flex;align-items:center;gap:10px;}
+.cal-nav-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:2px 9px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--text-muted);cursor:pointer;transition:all .12s;}
+.cal-nav-btn:hover{color:var(--gold);border-color:var(--gold);}
+.cal-month-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text);min-width:120px;text-align:center;}
+.cal-body{display:flex;gap:0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:14px 16px;flex:1.2;border-right:1px solid var(--border);}
+.cal-dow{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);text-align:center;padding-bottom:6px;}
+.cal-day{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-muted);cursor:default;background:var(--bg3);}
+.cal-day.empty{background:transparent;}
+.cal-day.has-event{color:var(--text);cursor:pointer;background:var(--bg4);}
+.cal-day.has-event:hover{box-shadow:0 0 0 1px var(--gold);}
+.cal-day.today{box-shadow:0 0 0 1px var(--gold2, var(--gold));color:var(--gold);}
+.cal-day.selected{background:var(--gold-dim);color:var(--gold);}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);position:absolute;bottom:5px;}
+.cal-events{flex:1;padding:14px 16px;min-width:220px;}
+.cal-daylabel{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+.cal-event{border-left:2px solid var(--gold);padding:6px 0 6px 10px;margin-bottom:10px;}
+.cal-event:last-child{margin-bottom:0;}
+.cal-time{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gold);}
+.cal-title{display:block;font-size:13px;color:var(--text);font-weight:600;margin-top:2px;}
+.cal-sub{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
+.cal-empty{font-size:12px;color:var(--text-muted);font-style:italic;padding-top:4px;}
+@media(max-width:640px){.cal-body{flex-direction:column;}.cal-grid{border-right:none;border-bottom:1px solid var(--border);}}
 .note strong{color:var(--text);font-style:normal;}
 
 @media(max-width:900px){.car-grid{grid-template-columns:1fr;}.ig-grid{grid-template-columns:1fr 1fr;}.stats{grid-template-columns:1fr 1fr;}.cost-sum{grid-template-columns:1fr 1fr;}}
@@ -308,6 +333,20 @@ tbody tr:hover .td-del{opacity:1;}
     <div class="card">
       <div class="card-head"><span class="card-label">Upcoming tasks</span><button class="btn" onclick="go('todos')">View all →</button></div>
       <ul class="todo-list" id="dash-todos"></ul>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-label">Calendar</span>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="calShift(-1)">←</button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button class="cal-nav-btn" onclick="calShift(1)">→</button>
+        </div>
+      </div>
+      <div class="cal-body">
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-events" id="cal-events"></div>
+      </div>
     </div>
   </section>
 
@@ -656,14 +695,14 @@ const DEFAULTS = {
     {id:41,name:'Padel',cat:'—',contact:'—',conn:'—',status:'no',tier:'—',notes:'—'},
   ],
   meetings:[
-    {id:1,date:"23 Feb '26 · 15:00",title:'Sponsor visits with Telmo',notes:''},
-    {id:2,date:"26 Feb '26 · 17:30",title:'Telmo — UNIRAID catch-up',notes:''},
-    {id:3,date:"27 Feb '26 · 21:15",title:'Sponsor call (UNIRAID)',notes:''},
-    {id:4,date:"2 Mar '26 · 14:00",title:'Sponsor visits with Telmo',notes:''},
-    {id:5,date:"6 Mar '26 · 16:00",title:'Romain Chalumeau — UNIRAID',notes:''},
-    {id:6,date:"15 Mar '26 · 10:00",title:'Paroisse posters & speech',notes:'Presenting UNIRAID at the parish'},
-    {id:7,date:"4 Sep '26 · 16:00",title:'Wonderbox sponsor call',notes:'Contact: Bertile / James. Platinum tier target €2,000.'},
-    {id:8,date:"13 Sep '26 · 12:00",title:'UNIRAID meeting',notes:''},
+    {id:1,date:"23 Feb '26 · 15:00",at:'2026-02-23T15:00',title:'Sponsor visits with Telmo',notes:''},
+    {id:2,date:"26 Feb '26 · 17:30",at:'2026-02-26T17:30',title:'Telmo — UNIRAID catch-up',notes:''},
+    {id:3,date:"27 Feb '26 · 21:15",at:'2026-02-27T21:15',title:'Sponsor call (UNIRAID)',notes:''},
+    {id:4,date:"2 Mar '26 · 14:00",at:'2026-03-02T14:00',title:'Sponsor visits with Telmo',notes:''},
+    {id:5,date:"6 Mar '26 · 16:00",at:'2026-03-06T16:00',title:'Romain Chalumeau — UNIRAID',notes:''},
+    {id:6,date:"15 Mar '26 · 10:00",at:'2026-03-15T10:00',title:'Paroisse posters & speech',notes:'Presenting UNIRAID at the parish'},
+    {id:7,date:"4 Sep '26 · 16:00",at:'2026-09-04T16:00',title:'Wonderbox sponsor call',notes:'Contact: Bertile / James. Platinum tier target €2,000.'},
+    {id:8,date:"13 Sep '26 · 12:00",at:'2026-09-13T12:00',title:'UNIRAID meeting',notes:''},
   ],
   gear:[
     {id:1,name:'Wala Barcelona',type:'in',loc:'Pg. Zona Franca 191, Barcelona',hours:'10:00–21:00',wk:'sat'},
@@ -735,11 +774,11 @@ const DEFAULTS = {
     leads:[
       {id:1,seller:'Quim',platform:'Milanuncios',price:'1.400€',loc:'Igualada',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-614444651.htm',contacted:'15 Sep',status:'sold',notes:'Ad now shows "Anuncio eliminado" — likely sold. Sent follow-up asking him to confirm, no reply yet.'},
       {id:2,seller:'Sánchez',platform:'Milanuncios',price:'1.500€',loc:'Badalona',link:'',contacted:'15 Sep',status:'sent',notes:'Diesel, sunroof. No reply yet. (Listing link not saved — check Milanuncios inbox.)'},
-      {id:3,seller:'Fran',platform:'Milanuncios',price:'1.600€',loc:'Sabadell',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-610192547.htm',contacted:'16 Sep',status:'sent',notes:'1989, 1.8 90cv, 196k km. ⚠ ITV expired since August, disclosed suspension noise.'},
-      {id:4,seller:'Arnaldo Colmenarez',platform:'Milanuncios',price:'2.200€',loc:'Barcelona',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-591881477.htm',contacted:'16 Sep',status:'sent',notes:'2001, 221k km, gasoline. Best-documented so far: ITV passed June, AC, electric windows, Bluetooth.'},
-      {id:5,seller:'Oscar',platform:'Milanuncios',price:'2.300€',loc:'Santa Perpètua de Mogoda',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-593536304.htm',contacted:'16 Sep',status:'sent',notes:'2002, 210k km, gasoline. Clutch + timing belt recently done, but seller discloses higher-than-normal oil consumption.'},
-      {id:6,seller:'Vixen',platform:'Milanuncios',price:'2.500€',loc:'Granollers',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-534135179.htm',contacted:'16 Sep',status:'sent',notes:'2008 diesel, 456k km. ⚠ Actually a Golf Variant (estate), not a hatchback. Seller prefers phone calls.'},
-      {id:7,seller:'Girona G.',platform:'Wallapop',price:'1.300€',loc:'Sant Feliu de Guíxols',link:'https://es.wallapop.com/item/volkswagen-golf-2001-1300759773',contacted:'17 Sep',status:'sent',notes:'2001, 1.9 TDI, reliable per seller. ITV valid to 2027, timing belt done. ⚠ ~88km from Barcelona.'},
+      {id:3,seller:'Fran',platform:'Milanuncios',price:'1.600€',loc:'Sabadell',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-610192547.htm',contacted:'16 Sep',status:'visit',visitAt:'2026-09-20T18:00',notes:'Proposed Sun afternoon (20 Sep); he confirmed Sabadell nord as location but didn\'t explicitly confirm the day/time - worth a quick confirm text. Contact: Francisco Contreras, 674 811 511. 1989, 1.8 90cv, 196k km. ITV expired since August, disclosed suspension noise.'},
+      {id:4,seller:'Arnaldo Colmenarez',platform:'Milanuncios',price:'2.200€',loc:'Barcelona',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-591881477.htm',contacted:'16 Sep',status:'sent',visitAt:'2026-09-24T12:00',notes:'Proposed Thu 24 Sep at 12:00 (La Mercè holiday) - sent, not yet seen/answered. 2001, 221k km, gasoline. Best-documented so far: ITV passed June, AC, electric windows, Bluetooth.'},
+      {id:5,seller:'Oscar',platform:'Milanuncios',price:'2.300€',loc:'Santa Perpètua de Mogoda',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-593536304.htm',contacted:'16 Sep',status:'visit',visitAt:'2026-09-25T12:00',notes:'Visit set: Fri 25 Sep, 12:00 at Lidl Santa Perpètua de Mogoda. He wants to reconfirm ~1 week out. 2002, 210k km, gasoline. Clutch + timing belt recently done, but seller discloses higher-than-normal oil consumption.'},
+      {id:6,seller:'Vixen',platform:'Milanuncios',price:'2.500€',loc:'Granollers',link:'https://www.milanuncios.com/volkswagen-de-segunda-mano/volkswagen-golf-534135179.htm',contacted:'16 Sep',status:'sent',notes:'Gave her your number, she called back but you missed it (13:39) - needs a callback. 2008 diesel, 456k km. Actually a Golf Variant (estate), not a hatchback. Seller prefers phone calls.'},
+      {id:7,seller:'Girona G.',platform:'Wallapop',price:'1.300€',loc:'Sant Feliu de Guíxols',link:'https://es.wallapop.com/item/volkswagen-golf-2001-1300759773',contacted:'17 Sep',status:'sent',notes:'He offered Saturday but that clashes with the 24h Barcelona race weekend - told him you can\'t make it and will reach out to reschedule. 2001, 1.9 TDI, reliable per seller. ITV valid to 2027, timing belt done. ~88km from Barcelona.'},
     ],
     notes:''
   },
@@ -899,6 +938,7 @@ function renderAll() {
   renderGameplan();
   renderInstagram();
   renderFunding();
+  renderCalendar();
 }
 
 function startSync() {
@@ -1134,6 +1174,72 @@ function saveMeeting(){
   D.meetings.push({id:_id++,date:v('mm-date')||'—',title:v('mm-title')||'New meeting',notes:v('mm-notes')||''});
   save();renderMeetings();closeModal('meeting-modal');
   ['mm-date','mm-title','mm-notes'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ── CALENDAR ─────────────────────────────────────────────
+const CAL_NOW = new Date();
+let calYear = CAL_NOW.getFullYear(), calMonth = CAL_NOW.getMonth(), calSelected = null;
+function calEvents(){
+  const evs = [];
+  (D.meetings||[]).forEach(m=>{ if(m.at) evs.push({at:m.at, title:m.title, sub:'Meeting', notes:m.notes}); });
+  (D.car&&D.car.leads||[]).forEach(l=>{ if(l.visitAt) evs.push({at:l.visitAt, title:'Visit: '+l.seller, sub:(l.loc||'')+(l.platform?' · '+l.platform:''), notes:l.notes}); });
+  return evs;
+}
+function calShift(n){
+  calMonth += n;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  calSelected=null;
+  renderCalendar();
+}
+function renderCalendar(){
+  const grid = document.getElementById('cal-grid');
+  if(!grid) return;
+  const evs = calEvents();
+  const byDay = {};
+  evs.forEach(e=>{
+    const d = new Date(e.at);
+    if(d.getFullYear()===calYear && d.getMonth()===calMonth){
+      (byDay[d.getDate()] = byDay[d.getDate()]||[]).push(e);
+    }
+  });
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = MONTHS[calMonth]+' '+calYear;
+  grid.innerHTML='';
+  ['M','T','W','T','F','S','S'].forEach(d=>{ const el=document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el); });
+  const first = new Date(calYear, calMonth, 1);
+  const startDow = (first.getDay()+6)%7;
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  for(let i=0;i<startDow;i++){ const el=document.createElement('div'); el.className='cal-day empty'; grid.appendChild(el); }
+  const today = new Date();
+  const isCurMonth = today.getFullYear()===calYear && today.getMonth()===calMonth;
+  if(calSelected===null){
+    const firstEventDay = Object.keys(byDay).map(Number).sort((a,b)=>a-b)[0];
+    calSelected = isCurMonth ? today.getDate() : (firstEventDay||null);
+  }
+  for(let day=1; day<=daysInMonth; day++){
+    const el=document.createElement('div');
+    el.className='cal-day'+(byDay[day]?' has-event':'')+(isCurMonth&&today.getDate()===day?' today':'')+(calSelected===day?' selected':'');
+    el.innerHTML='<span class="cal-daynum">'+day+'</span>'+(byDay[day]?'<span class="cal-dot"></span>':'');
+    el.onclick=()=>{ calSelected=day; renderCalendar(); };
+    grid.appendChild(el);
+  }
+  const evEl = document.getElementById('cal-events');
+  const dayEvs = calSelected ? (byDay[calSelected]||[]) : [];
+  if(!calSelected){
+    evEl.innerHTML = '<div class="cal-empty">No events this month.</div>';
+    return;
+  }
+  const dateLabel = new Date(calYear, calMonth, calSelected).toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
+  if(!dayEvs.length){
+    evEl.innerHTML = '<div class="cal-daylabel">'+dateLabel+'</div><div class="cal-empty">No events.</div>';
+    return;
+  }
+  dayEvs.sort((a,b)=>new Date(a.at)-new Date(b.at));
+  evEl.innerHTML = '<div class="cal-daylabel">'+dateLabel+'</div>' + dayEvs.map(e=>{
+    const time = new Date(e.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="cal-event"><span class="cal-time">'+time+'</span><span class="cal-title">'+esc(e.title)+'</span>'+(e.sub?'<span class="cal-sub">'+esc(e.sub)+'</span>':'')+'</div>';
+  }).join('');
 }
 
 function applySpFilter(){
